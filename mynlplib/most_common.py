@@ -14,8 +14,12 @@ def get_tag_word_counts(trainfile):
     :returns: -- a default dict of counters, where the keys are tags.
     """
     all_counters = defaultdict(lambda: Counter())
+    for (words,tags) in conll_seq_generator(trainfile):
+        for i in range(len(words)):
+            all_counters[tags[i]][words[i]] += 1
+            
     
-    raise NotImplementedError
+    #raise NotImplementedError
     
 
     

@@ -24,9 +24,16 @@ def make_classifier_tagger(weights):
         :param all_tags: all possible tags
         :returns: list of tags
         :rtype: list
-
         """
-        raise NotImplementedError
+        tags = []
+        for word in words:
+            dic = {}
+            dic[word] = 1
+            dic[OFFSET] = 1
+            tag, _ = clf_base.predict(dic,weights,all_tags)
+            tags.append(tag)
+        return tags    
+        #raise NotImplementedError
         
 
 
