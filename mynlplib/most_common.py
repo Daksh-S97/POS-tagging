@@ -96,8 +96,19 @@ def get_most_common_word_weights(trainfile):
 
     """
     weights = defaultdict(float)
+    taglist = set()
+    maxm = 0
+    for words,tags in conll_seq_generator(trainfile):
+        for word,tag in zip(words,tags):
+            weights[(tag,word)] += 1
+            weights[(tag,OFFSET)] += 1
+            taglist.add(tag)
+            maxm = max(maxm, weights[(tag,OFFSET)])
     
-    raise NotImplementedError
+    for tag in taglist:
+        weights[(tag, OFFSET)] = weights[(tag, OFFSET)]/maxm 
+    
+    #raise NotImplementedError
     
 
     

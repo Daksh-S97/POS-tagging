@@ -28,8 +28,8 @@ def make_classifier_tagger(weights):
         tags = []
         for word in words:
             dic = {}
-            dic[word] = 1
-            dic[OFFSET] = 1
+            dic[word] = 10
+            dic[OFFSET] = 10
             tag, _ = clf_base.predict(dic,weights,all_tags)
             tags.append(tag)
         return tags    
