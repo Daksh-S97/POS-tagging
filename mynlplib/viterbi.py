@@ -43,14 +43,30 @@ def viterbi_step(all_tags, tag_to_ix, cur_tag_scores, transition_scores, prev_sc
     """
     bptrs = []
     viterbivars=[]
-
+    ix = 0
+    #print(prev_scores[0])
     for cur_tag in list(all_tags):
+        c = cur_tag_scores[tag_to_ix[cur_tag]]
+        if c == -np.inf:
+            bptrs.append(tag_to_ix[START_TAG])
+            viterbivars.append(-np.inf)
+            continue
+        m = -np.inf
+        for prev_tag in list(all_tags):
+            t = transition_scores[tag_to_ix[cur_tag]][tag_to_ix[prev_tag]]
+            p = prev_scores[0][tag_to_ix[prev_tag]]
+            #print(c.shape, p.shape, t.shape)
+            if p == -np.inf:
+                continue
+            if t+p+c>m:
+                m = t+p+c
+                ix = tag_to_ix[prev_tag]
         
-        raise NotImplementedError
+        bptrs.append(ix)
+        viterbivars.append(m)
         
-
-    
-    return viterbivars, bptrs
+    viterbivars = Variable(torch.FloatTensor(viterbivars))
+    return viterbivars, bptrs 
 
 
 # Deliverable 3.4
@@ -81,19 +97,46 @@ def build_trellis(all_tags, tag_to_ix, cur_tag_scores, transition_scores):
     initial_vec = np.full((1,len(all_tags)),-np.inf)
     initial_vec[0][tag_to_ix[START_TAG]] = 0
     prev_scores = torch.autograd.Variable(torch.from_numpy(initial_vec.astype(np.float32))).view(1,-1)
-    whole_bptrs = []
+    whole_ptrs = []
+    bptrs = []
+    all_scores = []
+    path_score = 0.0
+    best_path = []
     for m in range(len(cur_tag_scores)):
+        scores,bptrs = viterbi_step(all_tags, tag_to_ix, cur_tag_scores[m], transition_scores, prev_scores.view(1,-1))
+        #print(scores, bptrs)
+        all_scores.append(scores)
+        prev_scores = scores
+        whole_ptrs.append(bptrs)
         
-        raise NotImplementedError
+        #raise NotImplementedError
 
         
    
     # after you finish calculating the tags for all the words: don't forget to calculate the scores for the END_TAG
-
-    
-    
+    m = -np.inf
+    ix = 0
+    end_vec = np.full(len(all_tags), -np.inf)
+    for tag in list(all_tags):
+        t = transition_scores[tag_to_ix[END_TAG]][tag_to_ix[tag]]
+        p = prev_scores.view(1,-1)[0][tag_to_ix[tag]]
+        if p == -np.inf:
+            bptrs.append(ix)
+            continue
+        if t + p > m:
+            m = t + p
+            ix = tag_to_ix[tag]
+    end_vec[-1] = m
+    bptrs = [0] * len(all_tags)
+    bptrs[-1] = ix
+    whole_ptrs.append(bptrs)
+    all_scores.append(Variable(torch.FloatTensor(end_vec)))        
     # Calculate the best_score and also the best_path using backpointers and don't forget to reverse the path
-
+    path_score = Variable(torch.Tensor(1,1))
+    path_score[0] = end_vec[-1]
+    for i in range(1,len(all_scores)):
+        ix = np.argmax(all_scores[i])
+        best_path.append(ix_to_tag[whole_ptrs[i][ix]])
     
     
     return path_score, best_path

@@ -54,8 +54,29 @@ def compute_weights_variables(nb_weights, hmm_trans_weights, vocab, word_to_ix, 
     
     tag_transition_probs = np.full((len(tag_to_ix), len(tag_to_ix)), -np.inf)
     emission_probs = np.full((len(vocab),len(tag_to_ix)), 0.0)
-    
-    raise NotImplementedError
+    for w,value in nb_weights.items():
+        if w[1] == '**OFFSET**':
+            continue
+        tag = w[0]
+        word = w[1]
+        emission_probs[word_to_ix[word]][tag_to_ix[tag]]=value
+    sti = tag_to_ix[START_TAG]
+    eti = tag_to_ix[END_TAG]
+    for j in range(len(vocab)):
+        emission_probs[j][sti] = -np.inf
+        emission_probs[j][eti] = -np.inf
+        
+    for t,value in hmm_trans_weights.items():
+        t1 = t[0]
+        t2 = t[1]
+        if t1 == '--START--':
+            tag_transition_probs[tag_to_ix[t1]][tag_to_ix[t2]]= -np.inf
+        elif t2 == '--END--':
+            tag_transition_probs[tag_to_ix[t1]][tag_to_ix[t2]]= -np.inf
+        else:
+            tag_transition_probs[tag_to_ix[t1]][tag_to_ix[t2]]=value
+        
+    #raise NotImplementedError
     
     
     
