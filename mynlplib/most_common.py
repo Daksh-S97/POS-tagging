@@ -126,8 +126,13 @@ def get_tag_trans_counts(trainfile):
     """
     
     tot_counts = defaultdict(lambda : Counter())
+    for (words,tags) in conll_seq_generator(trainfile):
+        tot_counts[START_TAG][tags[0]] += 1
+        for i in range(len(tags)-1):
+            tot_counts[tags[i]][tags[i+1]] += 1
+        tot_counts[tags[len(tags)-1]][END_TAG] += 1
     
-    raise NotImplementError
+    #raise NotImplementError
     
 
     

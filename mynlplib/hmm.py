@@ -22,12 +22,28 @@ def compute_transition_weights(trans_counts, smoothing):
     :returns: dict of features [(curr_tag,prev_tag)] and weights
 
     """
+    def ret():
+        return -np.inf
     
-    weights = defaultdict(float)
+    weights = defaultdict(ret)
     
     all_tags = list(trans_counts.keys())+ [END_TAG]
+    for tag1 in trans_counts.keys():
+        dic = dict()
+        den = 0.0
+        for tag2 in all_tags:
+            if tag2 == START_TAG:
+                continue
+            if tag2 in trans_counts[tag1].keys():
+                dic[tag2] = trans_counts[tag1][tag2]
+                den += trans_counts[tag1][tag2]
+            else:
+                dic[tag2] = smoothing
+                den += smoothing       
+        for tag2 in dic.keys():
+            weights[(tag2,tag1)] = np.log(dic[tag2]/den)
     
-    raise NotImplementedError
+    #raise NotImplementedError
     
     
     
