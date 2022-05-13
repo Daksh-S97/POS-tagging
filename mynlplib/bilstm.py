@@ -149,14 +149,18 @@ class BiLSTM_CRF(BiLSTM):
         init_vec[0][self.tag_to_ix[START_TAG]] = 0.
         
         prev_scores = torch.autograd.Variable(init_vec)
-        
+        #print(prev_scores.shape)
 
-        raise NotImplementedError
-       
+        #raise NotImplementedError
         for feat in feats:
             alphas=[]
+            prev_tag_ix = torch.argmax(prev_scores)
             for next_tag in range(self.tagset_size):
-                pass
+                t = self.transitions[next_tag][prev_tag_ix]
+                s = feat[next_tag] + t
+                
+        
+        return Variable(torch.FloatTensor(alphas[-1]))
 
     
     def score_sentence(self, feats, gold_tags):
