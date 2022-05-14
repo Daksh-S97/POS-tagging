@@ -154,13 +154,16 @@ class BiLSTM_CRF(BiLSTM):
         #raise NotImplementedError
         for feat in feats:
             alphas=[]
-            prev_tag_ix = torch.argmax(prev_scores)
             for next_tag in range(self.tagset_size):
-                t = self.transitions[next_tag][prev_tag_ix]
-                s = feat[next_tag] + t
-                
-        
-        return Variable(torch.FloatTensor(alphas[-1]))
+                t = self.transitions[:][next_tag]
+                s = torch.add(feat,t)
+                k = torch.mul(s,prev_scores)                
+                #print(s.size(), prev_scores[0].size())
+                alphas.append(log_sum_exp(k))    
+            prev_scores = torch.FloatTensor(alphas).view(1,-1)    
+            #print(prev_scores)    
+            
+        return Variable(prev_scores[0][-1])
 
     
     def score_sentence(self, feats, gold_tags):
