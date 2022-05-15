@@ -155,15 +155,14 @@ class BiLSTM_CRF(BiLSTM):
         for feat in feats:
             alphas=[]
             for next_tag in range(self.tagset_size):
-                t = self.transitions[:][next_tag]
+                t = self.transitions.data[next_tag,:]
+                #print(t.size(), feat.size())
                 s = torch.add(feat,t)
-                k = torch.mul(s,prev_scores)                
+                k = torch.add(s,prev_scores)
                 #print(s.size(), prev_scores[0].size())
-                alphas.append(log_sum_exp(k))    
-            prev_scores = torch.FloatTensor(alphas).view(1,-1)    
-            #print(prev_scores)    
-            
-        return Variable(prev_scores[0][-1])
+                alphas.append(log_sum_exp(k.view(1,-1)))
+            prev_scores = torch.FloatTensor(alphas).view(1,-1)            
+        return Variable(log_sum_exp(prev_scores))
 
     
     def score_sentence(self, feats, gold_tags):
