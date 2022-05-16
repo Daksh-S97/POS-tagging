@@ -121,14 +121,14 @@ def build_trellis(all_tags, tag_to_ix, cur_tag_scores, transition_scores):
         t = transition_scores[tag_to_ix[END_TAG]][tag_to_ix[tag]]
         p = prev_scores.view(1,-1)[0][tag_to_ix[tag]]
         if p == -np.inf:
-            bptrs.append(ix)
+            #bptrs.append(ix)
             continue
         if t + p > m:
             m = t + p
             ix = tag_to_ix[tag]
-    end_vec[-1] = m
+    end_vec[tag_to_ix[END_TAG]] = m
     bptrs = [0] * len(all_tags)
-    bptrs[-1] = ix
+    bptrs[tag_to_ix[END_TAG]] = ix
     whole_ptrs.append(bptrs)
     all_scores.append(Variable(torch.FloatTensor(end_vec)))  
     

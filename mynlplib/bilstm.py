@@ -155,15 +155,21 @@ class BiLSTM_CRF(BiLSTM):
         for feat in feats:
             alphas=[]
             for next_tag in range(self.tagset_size):
-                t = self.transitions.data[next_tag,:]
-                #print(t.size(), feat.size())
-                s = torch.add(feat,t)
-                k = torch.add(s,prev_scores)
-                #print(s.size(), prev_scores[0].size())
-                alphas.append(log_sum_exp(k.view(1,-1)))
-            prev_scores = torch.FloatTensor(alphas).view(1,-1)            
-        return Variable(log_sum_exp(prev_scores))
-
+                t = self.transitions[next_tag,:] #list of transition probabilities to current tag (next_tag)
+                s = torch.add(t,feat[next_tag]) 
+                #score = transition probabilites from all of the previous tags to the next_tag + emission probability of current tag (from feat) 
+                
+                k = torch.add(s,prev_scores[0]) #adding score to previous alphas
+                
+                alphas.append(log_sum_exp(k.view(1,-1))) #log_sum_exp of above value is the alpha for next_tag for the current token
+            
+            prev_scores = torch.cat(alphas).reshape(1,-1) #setting prev_scores to current alphas for next iteration            
+        
+        t = self.transitions[self.tag_to_ix[END_TAG], :]
+        k = torch.add(t, prev_scores[0])
+        
+        return Variable(log_sum_exp(k.view(1,-1))) #return alpha for end_tag after final iteration
+        #return Variable(torch.max(prev_scores[0]))
     
     def score_sentence(self, feats, gold_tags):
         """
@@ -181,8 +187,11 @@ class BiLSTM_CRF(BiLSTM):
         # adding the START_TAG here
         tags = torch.cat([Variable(torch.LongTensor([self.tag_to_ix[START_TAG]])), gold_tags])
         
-        raise NotImplementedError
-        
+        for i in range(feats.size()[0]):
+            s = self.transitions[tags[i+1],tags[i]] + feats[i][tags[i+1]]
+            score += s            
+        #raise NotImplementedError
+        score += self.transitions[self.tag_to_ix[END_TAG], tags[-1]]
         return score
     
     def predict(self, sentence):
@@ -199,7 +208,10 @@ class BiLSTM_CRF(BiLSTM):
         all_tags = [tag for tag,value in self.tag_to_ix.items()]
         
         # call the viterbi algorithm here
-        raise NotImplementedError
+        _, best_path = viterbi.build_trellis(all_tags, self.tag_to_ix, lstm_feats, self.transitions)
+        
+        return best_path
+        #raise NotImplementedError
 
 
     def neg_log_likelihood(self, lstm_feats, gold_tags):
@@ -213,8 +225,11 @@ class BiLSTM_CRF(BiLSTM):
         score of the neg-log-likelihood for the sentence: 
         You should use the previous functions defined: forward_alg, score_sentence
         """
+        score = self.score_sentence(lstm_feats, gold_tags)
+        log_alpha = self.forward_alg(lstm_feats)
         
-        raise NotImplementedError
+        return log_alpha-score
+        #raise NotImplementedError
 
 
 
