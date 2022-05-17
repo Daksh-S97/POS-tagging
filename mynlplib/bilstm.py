@@ -150,21 +150,23 @@ class BiLSTM_CRF(BiLSTM):
         
         prev_scores = torch.autograd.Variable(init_vec)
         #print(prev_scores.shape)
-
         #raise NotImplementedError
+        i = 0
         for feat in feats:
             alphas=[]
             for next_tag in range(self.tagset_size):
                 t = self.transitions[next_tag,:] #list of transition probabilities to current tag (next_tag)
-                s = torch.add(t,feat[next_tag]) 
+                alpha = torch.add(t,feat[next_tag]) 
                 #score = transition probabilites from all of the previous tags to the next_tag + emission probability of current tag (from feat) 
                 
-                k = torch.add(s,prev_scores[0]) #adding score to previous alphas
+                alpha = torch.add(alpha,prev_scores[0]) #adding score to previous alphas
                 
-                alphas.append(log_sum_exp(k.view(1,-1))) #log_sum_exp of above value is the alpha for next_tag for the current token
+                alphas.append(log_sum_exp(alpha.view(1,-1))) #log_sum_exp of above value is the alpha for next_tag for the current token
+                #print(alphas)
+            prev_scores[0] = torch.cat(alphas)#setting prev_scores to current alphas for next iteration            
+            #print(prev_scores)
+            i += 1
             
-            prev_scores = torch.cat(alphas).reshape(1,-1) #setting prev_scores to current alphas for next iteration            
-        
         t = self.transitions[self.tag_to_ix[END_TAG], :]
         k = torch.add(t, prev_scores[0])
         

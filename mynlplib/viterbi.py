@@ -134,7 +134,7 @@ def build_trellis(all_tags, tag_to_ix, cur_tag_scores, transition_scores):
     
     # Calculate the best_score and also the best_path using backpointers and don't forget to reverse the path
     path_score = Variable(torch.Tensor(1,1))
-    path_score[0] = end_vec[-1]
+    path_score[0] = end_vec[tag_to_ix[END_TAG]]
     cur_tag = END_TAG
     for i in range(len(all_scores)-1,0,-1):
         m = -np.inf
